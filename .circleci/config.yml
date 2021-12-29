@@ -1,0 +1,47 @@
+# Java Maven CircleCI 2.0 configuration file
+#
+# Check https://circleci.com/docs/2.0/language-java/ for more details
+#
+version: 2
+jobs:
+  buildLatest:
+    machine:
+        image: ubuntu-2004:202010-01
+        enabled: true
+        docker_layer_caching: true
+
+    working_directory: ~/jhipster-registry
+
+    environment:
+      MAVEN_OPTS: -Xmx768m
+
+    steps:
+      - checkout
+
+      - run:
+          name: Docker Login
+          command: |
+            docker info
+            docker login -u $DOCKERHUB_USERNAME -p $DOCKERHUB_PASSWORD
+            
+      - run:
+          name: Build Docker Image
+          command: docker build -t luxdeepblue/jhipster-registry:latest .
+
+      - run:
+          name: Deploy to Acceptance
+          command: |
+            docker push luxdeepblue/jhipster-registry:latest
+
+
+workflows:
+  version: 2
+  Jhipster-Registry-Workflow:
+    jobs:
+      - buildLatest:
+          context:
+            - GithubPackages
+            - VTODockerhub
+          filters:
+            branches:
+              only: lux-master
