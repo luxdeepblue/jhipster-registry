@@ -33,6 +33,36 @@ jobs:
           command: |
             docker push luxdeepblue/jhipster-registry:latest
 
+  applicationVersion:
+    machine:
+      image: ubuntu-2004:202010-01
+      enabled: true
+      docker_layer_caching: true
+
+    working_directory: ~/jhipster-registry
+
+    environment:
+      MAVEN_OPTS: -Xmx768m
+
+    steps:
+      - checkout
+
+      - run:
+          name: Docker Login
+          command: |
+            docker info
+            docker login -u $DOCKERHUB_USERNAME -p $DOCKERHUB_PASSWORD
+
+      - run:
+          name: Build Docker Image
+          command: docker build -t luxdeepblue/jhipster-registry:$CIRCLE_TAG .
+
+      - run:
+          name: Deploy Version
+          command: |
+            docker push luxdeepblue/jhipster-registry:$CIRCLE_TAG
+
+
 
 workflows:
   version: 2
@@ -44,3 +74,11 @@ workflows:
           filters:
             branches:
               only: lux-master
+      - applicationVersion:
+          context:
+            - VTODockerhub
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /.*/
